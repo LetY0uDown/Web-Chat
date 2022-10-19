@@ -10,7 +10,7 @@ public sealed class DatabaseContext : DbContext
         Database.EnsureCreated();
     }
 
-    public DbSet<Message> Messages => Set<Message>();
+    public DbSet<IMessage> Messages => Set<IMessage>();
     public DbSet<User> Users => Set<User>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

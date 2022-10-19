@@ -2,20 +2,20 @@
 
 namespace Models;
 
-[Table(nameof(Message))]
-public class Message : Entity
+[Table(nameof(UserMessage))]
+public class UserMessage : Entity, IMessage
 {
-    public Message(string text, User sender)
+    public UserMessage(string text, User sender)
     {
         Text = text;
         Sender = sender;
 
-        Date = DateTime.Now;
+        Date = DateTime.Now.ToShortTimeString();
     }
 
     public string? Text { get; set; }
 
     public User? Sender { get; set; }
 
-    public DateTime Date { get; set; }
+    public string Date { get; set; }
 }
