@@ -23,4 +23,12 @@
     <ProjectReference Include="..\WPF Client Library\WPF Client Library.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\Слава\source\repos\Web Chat\Chat Client\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\Слава\source\repos\Web Chat\Chat Client\.editorconfig" />
+  </ItemGroup>
+
 </Project>

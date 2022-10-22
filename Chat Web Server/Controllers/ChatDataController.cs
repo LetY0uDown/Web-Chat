@@ -1,21 +1,19 @@
 ﻿using Chat_Web_Server.Core;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Models;
 using System.Collections.ObjectModel;
 
 namespace Chat_Web_Server.Controllers;
 
-[ApiController, Route("chat/[controller]")]
+[ApiController, Route("data")]
 public sealed class ChatDataController : ControllerBase
 {
     private readonly DatabaseContext _dbContext;
-    private readonly ChatHub _hub;
 
-    public ChatDataController(DatabaseContext dbContext, IHubContext<ChatHub> hubContext)
+    public ChatDataController(DatabaseContext dbContext)
     {
+        Console.WriteLine("controller is active");
         _dbContext = dbContext;
-        _hub = hubContext as ChatHub;
     }
 
     [HttpGet("/users")]
@@ -25,25 +23,16 @@ public sealed class ChatDataController : ControllerBase
     }
 
     [HttpGet("/messages")]
-    public ActionResult<ObservableCollection<IMessage>> GetMessages()
+    public ActionResult<ObservableCollection<Message>> GetMessages()
     {
-        return Ok(_dbContext.Messages);
+        return Ok(_dbContext.UsersMessages);
     }
-
-    [HttpPost]
-    public async void PostMessage([FromBody] UserMessage msg)
-    {
-        await _hub.Clients.All.SendAsync("Recieve", msg);
-
-        await _dbContext.Messages.AddAsync(msg);
-        await _dbContext.SaveChangesAsync();
-    }
-
+        
     [HttpPost]
     public async void PostUser([FromBody] User user)
     {
-        await _hub.Clients.AllExcept(_hub.Context.ConnectionId).SendAsync("RecieveConnection", user);
-        await _hub.Clients.All.SendAsync("Recieve", new ServerMessage($"{user.Username} подключился к чату"));
+        //await _hub.Clients.AllExcept(_hub.Context.ConnectionId).SendAsync("RecieveConnection", user);
+        //await _hub.Clients.All.SendAsync("Recieve", new ServerMessage($"{user.Username} подключился к чату"));
 
         await _dbContext.Users.AddAsync(user);
         await _dbContext.SaveChangesAsync();
@@ -54,8 +43,8 @@ public sealed class ChatDataController : ControllerBase
     {
         var user = await _dbContext.Users.FindAsync(id);
 
-        await _hub.Clients.AllExcept(_hub.Context.ConnectionId).SendAsync("RecieveConnection", user);
-        await _hub.Clients.All.SendAsync("Recieve", new ServerMessage($"{user.Username} вышел из чата"));
+        //await _hub.Clients.AllExcept(_hub.Context.ConnectionId).SendAsync("RecieveConnection", user);
+        //await _hub.Clients.All.SendAsync("Recieve", new ServerMessage($"{user.Username} вышел из чата"));
 
         _dbContext.Users.Remove(user);
         await _dbContext.SaveChangesAsync();

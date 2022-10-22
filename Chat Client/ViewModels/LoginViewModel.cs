@@ -1,5 +1,6 @@
 ﻿using Chat_Client.Core.Tools;
 using Chat_Client.Views.Windows;
+using System.Windows;
 using WPF_Client_Library;
 
 namespace Chat_Client.ViewModels;
@@ -11,9 +12,14 @@ internal sealed class LoginViewModel : ObservableObject
         LoginCommand = new(async o => {
             App.CurrentUser = new(Login!, Password!);
 
-            await DataProvider.PostAsync(App.CurrentUser!, "ChatData");
+            var controller = HasAccount ? "login" : "registration";
 
-            App.ChangeMainWindow(new ChatWindow());
+            var result = await DataProvider.PostAsync(App.CurrentUser!, controller);
+
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                App.ChangeMainWindow(new ChatWindow());
+            else
+                MessageBox.Show($"Login failed with code {result.StatusCode}", "Fail");
 
         }, b => !string.IsNullOrWhiteSpace(Login) 
                 && !string.IsNullOrWhiteSpace(Password));

@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Models;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 using WPF_Client_Library;
 
 namespace Chat_Client.ViewModels;
@@ -12,11 +14,11 @@ internal sealed class ChatViewModel : ObservableObject
 
     public ChatViewModel()
     {
-        InitData();
+        _ = InitData();
 
-        Connect();
+        _ = Connect();
 
-        _hubConnection!.On<IMessage>("Recieve", msg => {
+        _hubConnection!.On<Message>("Recieve", msg => {
             Messages.Add(msg);
         });
 
@@ -29,11 +31,15 @@ internal sealed class ChatViewModel : ObservableObject
 
         SendMessageCommand = new(async o =>
         {
-            var msg = new UserMessage(Message!, App.CurrentUser!);
+            Message? msg = new()
+            {
+                Text = Message,
+                Date = System.DateTime.Now.ToShortTimeString(),
+                Sender = App.CurrentUser!.Username
+            };
 
-            await DataProvider.PostAsync(msg, "ChatData");
+            await _hubConnection!.InvokeAsync("SendMessage", msg);
 
-            Messages.Add(msg);
             Message = string.Empty;
 
         }, b => !string.IsNullOrWhiteSpace(Message));
@@ -41,24 +47,34 @@ internal sealed class ChatViewModel : ObservableObject
 
     public string? Message { get; set; }
 
-    public ObservableCollection<IMessage>? Messages { get; set; } = new();
+    public ObservableCollection<Message>? Messages { get; set; } = new();
 
     public ObservableCollection<User>? Users { get; set; } = new();
 
     public Command SendMessageCommand { get; private init; }
 
-    private async void InitData()
+    internal async Task Disconnect()
     {
-        Messages = await DataProvider.GetAsync<ObservableCollection<IMessage>>("ChatData", "/messages");
-        Users = await DataProvider.GetAsync<ObservableCollection<User>>("ChatData", "/users");
+        await _hubConnection!.InvokeAsync("Disconnect", App.CurrentUser!);
+        await _hubConnection!.StopAsync();
     }
 
-    private async void Connect()
+    private async Task InitData()
     {
-        _hubConnection = new HubConnectionBuilder().WithUrl(Config.GetValue("host"))
+        Messages = await DataProvider.GetAsync<ObservableCollection<Message>>("data", "/messages");
+        var users = await DataProvider.GetAsync<ObservableCollection<User>>("data", "/users");
+
+        Users = new(users.Where(u => u.Username != App.CurrentUser!.Username));
+    }
+
+    private async Task Connect()
+    {
+        _hubConnection = new HubConnectionBuilder().WithUrl(Config.GetValue("host") + "chat")
                                                    .WithAutomaticReconnect()
-                                                   .Build();        
+                                                   .Build();
 
         await _hubConnection.StartAsync();
-    }
+
+        await _hubConnection.InvokeAsync("Connect", App.CurrentUser!);
+    }    
 }

@@ -31,9 +31,8 @@ internal static class Config
     {
         File.Create(CONFIG_PATH).Close();
 
-        _config = new()
-        {
-            ["host"] = "https://localhost:7160/"
+        _config = new() {
+            ["host"] = "https://localhost:7195/"
         };
 
         var json = JsonSerializer.Serialize(_config);
