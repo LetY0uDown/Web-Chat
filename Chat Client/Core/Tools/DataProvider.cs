@@ -47,4 +47,9 @@ internal static class DataProvider
 
         return answer;
     }
+
+    internal static void Dispose()
+    {
+        _client.Dispose();
+    }
 }
