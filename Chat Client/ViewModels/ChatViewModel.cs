@@ -1,6 +1,7 @@
 ﻿using Chat_Client.Core.Tools;
 using Microsoft.AspNetCore.SignalR.Client;
 using Models;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,24 +19,7 @@ internal sealed class ChatViewModel : ObservableObject
 
         _ = Connect();
 
-        _hubConnection!.On<Message>("Recieve", msg => {
-            Messages.Add(msg);
-        });
-
-        // переделать
-        _hubConnection!.On<User>("RecieveConnection", user => {
-            if (!Users.Contains(user))
-                Users.Add(user);
-        });
-
-        _hubConnection!.On<Message>("DeleteMessage", message => {
-            var msg = Messages.FirstOrDefault(m => m.ID == message.ID);
-
-            Messages.Remove(msg!);
-        });
-
-        SendMessageCommand = new(async o =>
-        {
+        SendMessageCommand = new(async o => {
             Message? msg = new()
             {
                 Text = MessageText,
@@ -76,9 +60,6 @@ internal sealed class ChatViewModel : ObservableObject
     private async Task InitData()
     {
         Messages = await DataProvider.GetAsync<ObservableCollection<Message>>("data", "/messages");
-        var users = await DataProvider.GetAsync<ObservableCollection<User>>("data", "/users");
-
-        Users = new(users.Where(u => u.Username != App.CurrentUser!.Username));
     }
 
     private async Task Connect()
@@ -86,6 +67,30 @@ internal sealed class ChatViewModel : ObservableObject
         _hubConnection = new HubConnectionBuilder().WithUrl(Config.GetValue("host") + "chat")
                                                    .WithAutomaticReconnect()
                                                    .Build();
+
+        _hubConnection!.On<Message>("RecieveMessage", msg => {
+            Messages!.Add(msg);
+        });
+
+        _hubConnection!.On<IEnumerable<User>>("GetOnlineUsers", users => {
+            Users = new(users);
+        });
+
+        _hubConnection!.On<User>("HandleConnection", user => {
+            Users!.Add(user);
+        });
+
+        _hubConnection!.On<User>("HandleDisconnection", user => {
+            var userToDelete = Users!.FirstOrDefault(u => u.Username == user.Username)!;
+
+            Users!.Remove(userToDelete);
+        });
+
+        _hubConnection!.On<Message>("DeleteMessage", message => {
+            var msg = Messages!.FirstOrDefault(m => m.ID == message.ID);
+
+            Messages!.Remove(msg!);
+        });
 
         await _hubConnection.StartAsync();
 

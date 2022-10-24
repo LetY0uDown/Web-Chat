@@ -1,4 +1,4 @@
-using Chat_Host.Services;
+﻿using Chat_Host.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,10 +21,6 @@ app.MapHub<ChatHub>("/chat");
 
 app.MapGet("/data/messages", (DatabaseContext db) => {
     return db.Messages;
-});
-
-app.MapGet("data/users", (DatabaseContext db) => {
-    return db.Users;
 });
 
 app.Run();
