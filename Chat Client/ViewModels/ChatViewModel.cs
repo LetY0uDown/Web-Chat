@@ -22,36 +22,50 @@ internal sealed class ChatViewModel : ObservableObject
             Messages.Add(msg);
         });
 
+        // переделать
         _hubConnection!.On<User>("RecieveConnection", user => {
-            if (Users.Contains(user))
-                Users.Remove(user);
-            else
+            if (!Users.Contains(user))
                 Users.Add(user);
+        });
+
+        _hubConnection!.On<Message>("DeleteMessage", message => {
+            var msg = Messages.FirstOrDefault(m => m.ID == message.ID);
+
+            Messages.Remove(msg!);
         });
 
         SendMessageCommand = new(async o =>
         {
             Message? msg = new()
             {
-                Text = Message,
+                Text = MessageText,
                 Date = System.DateTime.Now.ToShortTimeString(),
                 Sender = App.CurrentUser!.Username
             };
 
             await _hubConnection!.InvokeAsync("SendMessage", msg);
 
-            Message = string.Empty;
+            MessageText = string.Empty;
 
-        }, b => !string.IsNullOrWhiteSpace(Message));
+        }, b => !string.IsNullOrWhiteSpace(MessageText));
+
+        DeleteMessage = new(async o => {
+            await _hubConnection!.InvokeAsync("DeleteMessage", SelectedMessage!.ID);
+
+        }, b => SelectedMessage is not null && SelectedMessage.Sender == App.CurrentUser!.Username);
     }
 
-    public string? Message { get; set; }
+    public Message? SelectedMessage { get; set; }
+
+    public string? MessageText { get; set; }
 
     public ObservableCollection<Message>? Messages { get; set; } = new();
 
     public ObservableCollection<User>? Users { get; set; } = new();
 
     public Command SendMessageCommand { get; private init; }
+
+    public Command DeleteMessage { get; private init; }
 
     internal async Task Disconnect()
     {

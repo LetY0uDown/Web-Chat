@@ -101,9 +101,18 @@
             </Grid.RowDefinitions>
 
             <!-- Messages -->
-            <ListView ItemsSource="{Binding Messages}"
-                      ItemTemplateSelector="{StaticResource MessageTemplateSelector}"
-                      HorizontalContentAlignment="Stretch"/>
+            <ListBox ItemsSource="{Binding Messages}"
+                     ItemTemplateSelector="{StaticResource MessageTemplateSelector}"
+                     HorizontalContentAlignment="Stretch"
+                     SelectedItem="{Binding SelectedMessage}">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Удалить сообщение" FontSize="18"
+                                  Command="{Binding DeleteMessage}"/>
+                    </ContextMenu>
+                </ListBox.ContextMenu>
+            </ListBox>
+
 
             <!-- User Input -->
             <Grid Grid.Row="1">
@@ -114,7 +123,7 @@
 
                 <Grid>
                     <TextBox Padding="5" x:Name="msgTextTB" FontSize="24"
-                             Margin="5" Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" />
+                             Margin="5" Text="{Binding MessageText, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBlock Margin="10" Text="Ваше сообщение.." IsHitTestVisible="False"
                                FontSize="24" VerticalAlignment="Center"
                                Foreground="Gray" 

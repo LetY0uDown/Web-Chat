@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Chat_Client.Core.Tools;
 using Chat_Client.ViewModels;
 
 namespace Chat_Client.Views.Windows;
@@ -16,5 +17,7 @@ public partial class ChatWindow : Window
     {
         var viewModel = DataContext as ChatViewModel;
         await viewModel!.Disconnect();
+
+        DataProvider.Dispose();
     }
 }
