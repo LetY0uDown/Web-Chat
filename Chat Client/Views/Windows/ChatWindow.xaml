@@ -101,10 +101,9 @@
             </Grid.RowDefinitions>
 
             <!-- Messages -->
-            <ListBox ItemsSource="{Binding Messages}"
-                     ItemTemplateSelector="{StaticResource MessageTemplateSelector}"
-                     x:Name="messages" 
-                     HorizontalContentAlignment="Stretch"/>
+            <ListView ItemsSource="{Binding Messages}"
+                      ItemTemplateSelector="{StaticResource MessageTemplateSelector}"
+                      HorizontalContentAlignment="Stretch"/>
 
             <!-- User Input -->
             <Grid Grid.Row="1">
